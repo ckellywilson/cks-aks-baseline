@@ -1,0 +1,10 @@
+# Ignore vscode files
+**/.vscode
+
+# Ignore Terraform files
+**/*.tfstate.*
+**/*.tfstate.*
+**/*.tfvars
+**/*.terraform.*
+**/terraform.*
+**/.terraform
