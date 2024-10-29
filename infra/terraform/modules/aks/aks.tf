@@ -68,13 +68,6 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
     vm_size    = var.vm_size
   }
 
-  # linux_profile {
-  #   admin_username = var.admin_username
-  #   ssh_key {
-  #     key_data = file(var.ssh_key_file)
-  #   }
-  # }
-
   identity {
     type = "UserAssigned"
     identity_ids = [
