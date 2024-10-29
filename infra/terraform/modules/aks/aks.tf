@@ -29,6 +29,16 @@ variable "kubelet_identity_id" {
   type        = string
 }
 
+variable "kubelet_identity_client_id" {
+  description = "The Client ID of the User Assigned Identity for Kubelet"
+  type        = string
+}
+
+variable "kubelet_identity_object_id" {
+  description = "The Object ID of the User Assigned Identity for Kubelet"
+  type        = string
+}
+
 variable "vm_size" {
   description = "The size of the VMs in the AKS cluster"
   type        = string
@@ -38,6 +48,12 @@ variable "vm_size" {
 variable "ssh_key_file" {
   description = "The path to the SSH public key file"
   type        = string
+}
+
+variable "admin_username" {
+  description = "The username for the admin user"
+  type        = string
+  default     = "vscode"
 }
 
 resource "azurerm_kubernetes_cluster" "aks_cluster" {
@@ -52,12 +68,12 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
     vm_size    = var.vm_size
   }
 
-  linux_profile {
-    admin_username = "azureuser"
-    ssh_key {
-      key_data = file(var.ssh_key_file)
-    }
-  }
+  # linux_profile {
+  #   admin_username = var.admin_username
+  #   ssh_key {
+  #     key_data = file(var.ssh_key_file)
+  #   }
+  # }
 
   identity {
     type = "UserAssigned"
@@ -68,10 +84,13 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
 
   kubelet_identity {
     user_assigned_identity_id = var.kubelet_identity_id
+    client_id                 = var.kubelet_identity_client_id
+    object_id                 = var.kubelet_identity_id
   }
 
   network_profile {
-    network_plugin = "azure"
-    network_policy = "azure"
+    network_plugin      = "azure"
+    network_policy      = "azure"
+    network_plugin_mode = "overlay"
   }
 }

@@ -1,7 +1,3 @@
-variable "prefix" {
-  description = "A prefix to add to the beginning of the generated resource names."
-}
-
 variable "resource_group_name" {
   description = "The name of the resource group in which to create the user assigned identity."
 }
@@ -16,8 +12,12 @@ variable "tags" {
   default     = {}
 }
 
+variable "identity_name" {
+  description = "The name of the user assigned identity."
+}
+
 resource "azurerm_user_assigned_identity" "user_managed_identity" {
-  name                = "${var.prefix}-aks-identity"
+  name                = var.identity_name
   resource_group_name = var.resource_group_name
   location            = var.location
 }
@@ -25,6 +25,11 @@ resource "azurerm_user_assigned_identity" "user_managed_identity" {
 output "id" {
   description = "The ID of the user assigned identity."
   value       = azurerm_user_assigned_identity.user_managed_identity.id
+}
+
+output "name" {
+  description = "The name of the user assigned identity."
+  value       = azurerm_user_assigned_identity.user_managed_identity.name
 }
 
 output "client_id" {

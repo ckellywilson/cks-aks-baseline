@@ -111,19 +111,19 @@ module "vnet_cloud" {
 # }
 
 module "aks_identity" {
-  source              = "./modules/identity/aks-identity"
-  prefix              = var.prefix
+  source              = "./modules/identity"
   location            = var.location
   resource_group_name = azurerm_resource_group.rg.name
   tags                = var.tags
+  identity_name       = "${var.prefix}-aks-identity"
 }
 
 module "kubelet_identity" {
-  source              = "./modules/identity/kubelet-identity"
-  prefix              = var.prefix
+  source              = "./modules/identity"
   location            = var.location
   resource_group_name = azurerm_resource_group.rg.name
   tags                = var.tags
+  identity_name       = "${var.prefix}-kubelet-identity"
 }
 
 module "acr" {
@@ -133,9 +133,16 @@ module "acr" {
   prefix              = var.prefix
 }
 
+module "role_assign_aks_identity_managed_identity_operator" {
+  source               = "./modules/role-assign"
+  scope                = module.aks_identity.id
+  role_definition_name = "Managed Identity Operator"
+  principal_id         = module.kubelet_identity.principal_id
+}
+
 module "role_assign_aks_identity_acr" {
   source               = "./modules/role-assign"
-  id                   = module.acr.acr_id
+  scope                = module.acr.acr_id
   role_definition_name = "AcrPull"
   principal_id         = module.kubelet_identity.principal_id
 }
@@ -149,21 +156,25 @@ module "kv" {
 
 module "role_assign_kubelet_identity_kv" {
   source               = "./modules/role-assign"
-  id                   = module.kv.kv_id
+  scope                = module.kv.kv_id
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = module.aks_identity.principal_id
 }
 
-# module "aks" {
-#   source              = "./modules/aks"
-#   prefix              = var.prefix
-#   location            = var.location
-#   resource_group_name = azurerm_resource_group.rg.name
-#   tags                = var.tags
-#   aks_identity_id     = module.aks_identity.id
-#   kubelet_identity_id = module.kubelet_identity.id
-#   ssh_key_file        = var.ssh_key_file
-# }
+module "aks" {
+  source                     = "./modules/aks"
+  prefix                     = var.prefix
+  location                   = var.location
+  resource_group_name        = azurerm_resource_group.rg.name
+  tags                       = var.tags
+  vm_size                    = "standard_d2plds_v5"
+  aks_identity_id            = module.aks_identity.id
+  kubelet_identity_id        = module.kubelet_identity.id
+  kubelet_identity_client_id = module.kubelet_identity.client_id
+  kubelet_identity_object_id = module.kubelet_identity.principal_id
+  ssh_key_file               = var.ssh_key_file
+  admin_username             = var.vm_admin_username
+}
 
 module "app_insights" {
   prefix              = var.prefix
